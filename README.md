@@ -1,168 +1,61 @@
-# ![](https://ga-dash.s3.amazonaws.com/production/assets/logo-9f88ae6c9c3871690e33280fcf557f33.png) Project 3: Web APIs & NLP
+# Subreddit Parsing and Classification
 
-### Description
+## Problem Statement
 
-In week four we've learned about a few different classifiers. In week five we'll learn about webscraping, APIs, and Natural Language Processing (NLP). This project will put those skills to the test.
+To someone unfamiliar with the genre, fantasy literature all seems the same. Most people are familiar with the common tropes: magic, swords, knights, dragons and adventures. While these things are common to most fantasy novels, there must be distinguishing factors that determine the popularity of potential fantasy series. To book publishers such as Tor and HarperCollins, these differences matter greatly. In terms of marketing: how do we reach potential customers? what keywords are popular among the fanbase? do certain topics, terms or names attract the interests of potential readers? In terms of deciding what to publish: Will any book with the common tropes suffice? Are series-specific jargon a signifier of success? Is being able to sustain an active fan community vital to high sales? In this report, I will analyze the fanbases active on Reddit of two popular fantasy series: A Song of Ice and Fire (known for the popular TV adaption A Game of Thrones) and The Stormlight Archives (written by Brandon Sanderson and one of the highest selling fantasy series to date). By collecting and parsing Reddit posts from their respective subreddits, and building a classifier that can identify what truly distinguishes these series and fanbases, I hope to answer some of these questions.
 
-For project 3, your goal is two-fold:
-1. Using [Pushshift's](https://github.com/pushshift/api) API, you'll collect posts from two subreddits of your choosing.
-2. You'll then use NLP to train a classifier on which subreddit a given post came from. This is a binary classification problem.
+## Data Structure
+The data for this project was collected from two subreddits: r/asoiaf, and r/Stormlight_Archive. For the sake of brevity, these will be frequently referred to as GT and SA respectively in my notebooks. Over 1000 posts were collected from each Subreddit and combined into seperate Dataframes, stored in the data directory as SA_data.csv and GT_data.csv. These were later engineered and combined into book_data.csv, which contained all the data that will be used. In final modelling, Count Vectorized DataFrames were generated to train my classification models.
 
+## Data Dictionary
+Below is a dictionary of the columns in the book_data.csv, after cleaning and feature engineering. The data used in predictions was Count Vectorized based on the words in each post and contain 5,000 columns, each representing a word or word pair.
 
-#### About the API
-
-Pushshift's API is fairly straightforward. For example, if I want the posts from [`/r/boardgames`](https://www.reddit.com/r/boardgames), all I have to do is use the following url: https://api.pushshift.io/reddit/search/submission?subreddit=boardgames
-
-To help you get started, we have a primer video on how to use the API: https://youtu.be/AcrjEWsMi_E
-
-**NOTE:** Pushshift now limits you to 100 posts per request (no longer the 500 in the screencast).
-
----
-
-### Requirements
-
-- Gather and prepare your data using the `requests` library.
-- **Create and compare two models**. Any two classifiers at least of your choosing: random forest, logistic regression, KNN, SVM, etc.
-- A Jupyter Notebook with your analysis for a peer audience of data scientists.
-- An executive summary of your results.
-- A short presentation outlining your process and findings for a semi-technical audience.
-
-**Pro Tip:** You can find a good example executive summary [here](https://www.proposify.biz/blog/executive-summary).
-
----
-
-### Necessary Deliverables / Submission
-
-- Code must be in at least one clearly commented Jupyter Notebook.
-- A readme/executive summary in markdown.
-- You must submit your slide deck as a PDF.
-- Materials must be submitted by **10:00 AM (EST) on Friday, October 28**.
-
----
-
-## Rubric
-Your instructors will evaluate your project (for the most part) using the following criteria.  You should make sure that you consider and/or follow most if not all of the considerations/recommendations outlined below **while** working through your project.
-
-For Project 3 the evaluation categories are as follows:<br>
-**The Data Science Process**
-- Problem Statement
-- Data Collection
-- Data Cleaning & EDA
-- Preprocessing & Modeling
-- Evaluation and Conceptual Understanding
-- Conclusion and Recommendations
-
-**Organization and Professionalism**
-- Organization
-- Visualizations
-- Python Syntax and Control Flow
-- Presentation
-
-**Scores will be out of 30 points based on the 10 categories in the rubric.** <br>
-*3 points per section*<br>
-
-| Score | Interpretation |
-| --- | --- |
-| **0** | *Project fails to meet the minimum requirements for this item.* |
-| **1** | *Project meets the minimum requirements for this item, but falls significantly short of portfolio-ready expectations.* |
-| **2** | *Project exceeds the minimum requirements for this item, but falls short of portfolio-ready expectations.* |
-| **3** | *Project meets or exceeds portfolio-ready expectations; demonstrates a thorough understanding of every outlined consideration.* |
+| feature | dtype |Description
+| --- | --- | --- |
+| selftext | object |This column contains the raw text of each post
+| subreddit | object |This column contains the subreddit the text originated from. It is the final y value.
+| title | object |The title of each post
+| tokenized_text | object |Post text seperated into tokens. This removed punctuation and other symbols
+| tokenized_text_clean | object |tokenized text with engligh stopwords removed
+| char_count | int64 |The character count of each post
+| word_count | int64 |The word count of each post
+| tagged_tokens | object |cleaned tokenized text with parts of speach for each word
+| lemmatized_words | object |Cleaned, tokenized text reduced to the root form of each word
 
 
-### The Data Science Process
+## Work Flow
 
-**Problem Statement**
-- Is it clear what the goal of the project is?
-- What type of model will be developed?
-- How will success be evaluated?
-- Is the scope of the project appropriate?
-- Is it clear who cares about this or why this is important to investigate?
-- Does the student consider the audience and the primary and secondary stakeholders?
+### Retrieving and Combining Reddit Data
+#### 01Retrieving_and_Combining_Data.ipynb
 
-**Data Collection**
-- Was enough data gathered to generate a significant result?
-- Was data collected that was useful and relevant to the project?
-- Was data collection and storage optimized through custom functions, pipelines, and/or automation?
-- Was thought given to the server receiving the requests such as considering number of requests per second?
+Using the python requests library, I accessed PushShiftAPI to collect 250 posts from each subreddit for each month in 2020 until enough data was collected. These were parsed into post text, title and subreddit, and combined into DataFrames. Rows without text, "removed" text, or NA values were dropped. These were then written to csvs for further analysis.
 
-**Data Cleaning and EDA**
-- Are missing values imputed/handled appropriately?
-- Are distributions examined and described?
-- Are outliers identified and addressed?
-- Are appropriate summary statistics provided?
-- Are steps taken during data cleaning and EDA framed appropriately?
-- Does the student address whether or not they are likely to be able to answer their problem statement with the provided data given what they've discovered during EDA?
+### Data Processing and Feature Engineering
+#### 02Processing_and_Feature_Engineering.ipynb
 
-**Preprocessing and Modeling**
-- Is text data successfully converted to a matrix representation?
-- Are methods such as stop words, stemming, and lemmatization explored?
-- Does the student properly split and/or sample the data for validation/training purposes?
-- Does the student test and evaluate a variety of models to identify a production algorithm (**AT MINIMUM:** two models)?
-- Does the student defend their choice of production model relevant to the data at hand and the problem?
-- Does the student explain how the model works and evaluate its performance successes/downfalls?
+Here the data was prepared. All post text was converted into lower case for easier handling. Using the RegexpTokenizer, another column was created with tokenized words from each post. English stopwords were identified and removed from these words and put into a new column. Columns containing word and character counts from the original posts were created as well. The cleaned text was then lemmatized, or reduced to the root words for each word, and put into yet another column. This is the text from which Count Vectorization will be done later. Finally, the DataFrames were combined into one, shuffled, and written to a new csv: book_data.csv.
 
-**Evaluation and Conceptual Understanding**
-- Does the student accurately identify and explain the baseline score?
-- Does the student select and use metrics relevant to the problem objective?
-- Does the student interpret the results of their model for purposes of inference?
-- Is domain knowledge demonstrated when interpreting results?
-- Does the student provide appropriate interpretation with regards to descriptive and inferential statistics?
+### Exploratory Data Analysis and Visualization
+#### 03EDA_and_Visualization.ipynb
 
-**Conclusion and Recommendations**
-- Does the student provide appropriate context to connect individual steps back to the overall project?
-- Is it clear how the final recommendations were reached?
-- Are the conclusions/recommendations clearly stated?
-- Does the conclusion answer the original problem statement?
-- Does the student address how findings of this research can be applied for the benefit of stakeholders?
-- Are future steps to move the project forward identified?
+In this notebook, I explored and visualized the data I had prepared. First I generated a series of histograms and bar charts that explored the distribution of word and character counts for each subreddit. I noticed that SA posts were on average about half the length of GT posts, and there was a large concentration of short SA posts. There were some outlier posts going into 1,000s and words and 100s of 1,000s of characters, but these were relatively rare. Next, I began to look at the text itself. Using a count vectorizor for exploratory purposes, I gathered the most popular words and word pairs in each subreddit. I noticed that many of these were terms specific to their respective books and did not make sense outside of that context. Others were character, book, or author names. Both when looking at pairs of words, and when using a Tfidf vectorizer to identify more original words, these series specific terms were even more dominant. Normal everyday words were only common when looking at single words from normal Count Vectorization.
+
+### Modelling and Predictions
+#### 04Modelling.ipynb
+
+Here I began to use two different classification models to identify patterns in the subreddits. I Count Vectorized my data into 5,000 columns, each signifying the presence of a word or term, and began to model. I first chose Random Forest Classifier. This model is known for having a high classification accuracy, and is especially good at dealing with large data consisting of thousands of variables, which is what I had. Random Forest works by generating multiple decision trees, each modeling a subset of the rows and columns, and merging them together for more accurate predictions. By swapping in and out data, individual trees may be able to find patterns and splits in the data that can be important to the classification, but would normally be lost among stronger signals. I Chose Support Vector Machine for my second model. This model is also good with high dimensional data, and especially unstructured data. It works by creating a hyperplane that can seperate the two classes. It is also able to add extra dimensionality to the data so that clusters of classes can be more easily seperated by the hyperplane. 
+
+I grid searched number of estimators and max depth for Random Forest, and the C value for SVM in order to find the best hyperparameters. After cross validation and test data prediction, Random Forest achieved the highest accuracy of about 0.93. Since the classes were evenly balanced (51% vs 49%) I decided accuracy was a useful metric.
 
 
-### Organization and Professionalism
+## Conclusions
 
-**Project Organization**
-- Are modules imported correctly (using appropriate aliases)?
-- Are data imported/saved using relative paths?
-- Does the README provide a good executive summary of the project?
-- Is markdown formatting used appropriately to structure notebooks?
-- Are there an appropriate amount of comments to support the code?
-- Are files & directories organized correctly?
-- Are there unnecessary files included?
-- Do files and directories have well-structured, appropriate, consistent names?
+My research here was revealing about the interests of fans and customers in their reading habits. Having an active fanbase is an extremely important signifier for the success and popularity of a series, and this correlates strongly with their communities on reddit, how much the fans interact, and what they talk about. By analyzing these subreddits I took a useful snapshot of how potential customers behave.
 
-**Visualizations**
-- Are sufficient visualizations provided?
-- Do plots accurately demonstrate valid relationships?
-- Are plots labeled properly?
-- Are plots interpreted appropriately?
-- Are plots formatted and scaled appropriately for inclusion in a notebook-based technical report?
+The first factor of note is book adaptions. The Song of Ice and Fire series was always popular, but activity skyrocketted when popular television adaptions of these books began to come out. Although A Game of Thrones ended several years ago, activity in this subreddit remains high. Adapting a series, or publishing more books in an already adapted series, is a good way to ensure high interest. 
 
-**Python Syntax and Control Flow**
-- Is care taken to write human readable code?
-- Is the code syntactically correct (no runtime errors)?
-- Does the code generate desired results (logically correct)?
-- Does the code follows general best practices and style guidelines?
-- Are Pandas functions used appropriately?
-- Are `sklearn` and `NLTK` methods used appropriately?
+Another important factor is frequency of book releases. The Stormlight Archives series publishes regularly every 3 years, and published a book in the year 2020 from which the data was collected. The title of said book, Rythym of War, was very high in frequency when analyzing the text. Likewise, the most recently published book in the Game of Thrones series was mentioned often. Extra priority should be given in terms of marketing and publishing to series that regularly come out with new books.
 
-**Presentation**
-- Is the problem statement clearly presented?
-- Does a strong narrative run through the presentation building toward a final conclusion?
-- Are the conclusions/recommendations clearly stated?
-- Is the level of technicality appropriate for the intended audience?
-- Is the student substantially over or under time?
-- Does the student appropriately pace their presentation?
-- Does the student deliver their message with clarity and volume?
-- Are appropriate visualizations generated for the intended audience?
-- Are visualizations necessary and useful for supporting conclusions/explaining findings?
+Having series specific jargon seems to be a sure way to gather a fanbase. These were by far the most common popular terms discussed in the reddit texts. This relationship is simple: give fans something specific to discuss and theorize about, and they will. The community will be more active, more engaged, and probably more likely to purchase new books as they come out. Character names were also occured very frequently, because fans love to discuss their favorite characters and what may happen to them in the future. In short, give the fans something to get attached to.
 
-
----
-
-### Why did we choose this project for you?
-This project covers three of the biggest concepts we cover in the class: Classification Modeling, Natural Language Processing and Data Wrangling/Acquisition.
-
-Part 1 of the project focuses on **Data wrangling/gathering/acquisition**. This is a very important skill as not all the data you will need will be in clean CSVs or a single table in SQL.  There is a good chance that wherever you land you will have to gather some data from some unstructured/semi-structured sources; when possible, requesting information from an API, but sometimes scraping it because they don't have an API (or it's terribly documented).
-
-Part 2 of the project focuses on **Natural Language Processing** and converting standard text data (like Titles and Comments) into a format that allows us to analyze it and use it in modeling.
-
-Part 3 of the project focuses on **Classification Modeling**.  Given that project 2 was a regression focused problem, we needed to give you a classification focused problem to practice the various models, means of assessment and preprocessing associated with classification.   
+By following these guidelines, publishers have a useful roadmap of what to publish and continue publishing. The series I analyzed are two of the most popular fiction book series IN HISTORY, and this does not happen by accident. Though these series are different in detail, as shown by the success of my classification models, they can be identified and distinguished by the same types of factors. By looking at what they did right, and what the fans are attracted to, future books can follow in their success as well.
